@@ -1,4 +1,5 @@
 from rest_framework import generics
+from rest_framework.exceptions import ValidationError
 
 from .models import Chamado
 from .serializers import ChamadoSerializer
@@ -16,7 +17,20 @@ class ChamadoListCreateView(generics.ListCreateAPIView):
         if not status_filtro:
             return queryset
 
-        return queryset.filter(status=status_filtro.strip())
+        status_filtro = status_filtro.strip()
+        status_validos = list(Chamado.Status.values)
+
+        if status_filtro not in status_validos:
+            raise ValidationError(
+                {
+                    "status": (
+                        "Status inválido. Valores aceitos: "
+                        f"{', '.join(status_validos)}."
+                    )
+                }
+            )
+
+        return queryset.filter(status=status_filtro)
 
 
 class ChamadoDetailView(generics.RetrieveUpdateAPIView):
