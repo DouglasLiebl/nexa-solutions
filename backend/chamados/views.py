@@ -5,17 +5,18 @@ from .serializers import ChamadoSerializer
 
 
 class ChamadoListCreateView(generics.ListCreateAPIView):
-    """
-    Lista e cria chamados.
+    """Lista e cria chamados, com filtro opcional por status."""
 
-    Limitações intencionais:
-    - Não filtra chamados por status.
-    - Não oferece indicadores.
-    - Não há tratamento adicional para parâmetros inválidos.
-    """
-
-    queryset = Chamado.objects.all().order_by("-criado_em")
     serializer_class = ChamadoSerializer
+
+    def get_queryset(self):
+        queryset = Chamado.objects.all().order_by("-criado_em")
+        status_filtro = self.request.query_params.get("status")
+
+        if not status_filtro:
+            return queryset
+
+        return queryset.filter(status=status_filtro.strip())
 
 
 class ChamadoDetailView(generics.RetrieveUpdateAPIView):
