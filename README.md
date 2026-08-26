@@ -1,48 +1,174 @@
 # Sistema de Chamados — Nexa Solutions
 
-Projeto inicial para a disciplina de Manutenção e Evolução de Software.
+API REST para abertura e acompanhamento de chamados de suporte interno, com interface HTML simples para consulta e cadastro.
 
 ## Contexto
 
-A Nexa Solutions possui um sistema interno para abertura e acompanhamento de chamados de suporte.
-
-O projeto possui uma API REST desenvolvida em Django e uma interface HTML simples para consulta e cadastro de chamados.
+A Nexa Solutions utiliza este sistema para registrar chamados com título, descrição e status. O backend foi desenvolvido com Django e Django REST Framework; o frontend é uma página HTML estática que consome a API.
 
 ## Tecnologias
 
-- Python
-- Django
+- Python 3.12+
+- Django 5
 - Django REST Framework
-- SQLite
-- Docker
-- Docker Compose
+- SQLite (desenvolvimento local)
+- PostgreSQL (ambiente Docker)
+- Docker e Docker Compose
 - Git
 
-## Estrutura
+## Estrutura do projeto
 
 ```text
-backend/   # API Django
-frontend/  # Interface HTML simples
-docs/      # Documentação e demandas
+nexa-solutions/
+├── backend/           # API Django
+│   ├── chamados/      # App de chamados
+│   ├── config/        # Configurações do projeto
+│   ├── manage.py
+│   └── requirements.txt
+├── frontend/          # Interface HTML simples
+│   └── index.html
+├── docs/              # Documentação e demandas da empresa
+├── .env.example       # Modelo de variáveis de ambiente
+├── Dockerfile
+├── docker-compose.yml
+└── README.md
 ```
 
-## Executar localmente
+## Pré-requisitos
+
+Para execução local:
+
+- Python 3.12 ou superior
+- `pip` e ambiente virtual (`venv`)
+
+Para execução com Docker:
+
+- Docker
+- Docker Compose
+
+## Configuração do ambiente
+
+Copie o arquivo de exemplo e ajuste os valores conforme necessário:
 
 ```bash
-cd backend
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver
+cp .env.example .env
 ```
 
-A API estará disponível em:
+O arquivo `.env` **não** deve ser versionado — ele já está listado no `.gitignore`. Use o `.env.example` apenas como referência, substituindo os valores de exemplo antes de subir o ambiente.
+
+Variáveis disponíveis:
+
+| Variável | Descrição |
+|---|---|
+| `DJANGO_SECRET_KEY` | Chave secreta do Django |
+| `DEBUG` | Modo de depuração (`True` ou `False`) |
+| `ALLOWED_HOSTS` | Hosts permitidos, separados por vírgula |
+| `POSTGRES_DB` | Nome do banco PostgreSQL |
+| `POSTGRES_USER` | Usuário do banco |
+| `POSTGRES_PASSWORD` | Senha do banco |
+| `POSTGRES_HOST` | Host do banco (ex.: `db` no Docker) |
+| `POSTGRES_PORT` | Porta do banco (padrão: `5432`) |
+
+## Executar com Docker
+
+Na raiz do repositório, com o `.env` configurado:
+
+```bash
+docker compose up --build
+```
+
+A API ficará disponível em:
 
 ```text
 http://localhost:8000/api/chamados/
 ```
 
-## Observação
+Para encerrar os containers:
 
-A documentação deste projeto está incompleta. A dupla deverá melhorar este arquivo como parte da atividade.
+```bash
+docker compose down
+```
+
+## Executar localmente (desenvolvimento)
+
+Alternativa para desenvolvimento sem Docker:
+
+```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate   # Linux/macOS
+# .venv\Scripts\Activate.ps1  # Windows PowerShell
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
+```
+
+A API estará em `http://localhost:8000/api/chamados/`.
+
+Para usar a interface HTML, abra `frontend/index.html` no navegador com a API em execução.
+
+## Testes automatizados
+
+Com o ambiente virtual ativado e as dependências instaladas:
+
+```bash
+cd backend
+python manage.py test chamados
+```
+
+Para executar toda a suíte de testes do projeto:
+
+```bash
+cd backend
+python manage.py test
+```
+
+## Endpoints da API
+
+Base URL: `http://localhost:8000/api/`
+
+### Chamados
+
+| Método | Rota | Descrição |
+|---|---|---|
+| `GET` | `/chamados/` | Lista todos os chamados |
+| `GET` | `/chamados/?status=ABERTO` | Filtra chamados por status |
+| `POST` | `/chamados/` | Cria um novo chamado |
+| `GET` | `/chamados/{id}/` | Consulta um chamado pelo ID |
+| `PUT` / `PATCH` | `/chamados/{id}/` | Atualiza um chamado existente |
+
+**Status aceitos:** `ABERTO`, `EM_ANDAMENTO`, `CONCLUIDO`.
+
+### Exemplos
+
+Listar chamados abertos:
+
+```bash
+curl "http://localhost:8000/api/chamados/?status=ABERTO"
+```
+
+Criar chamado:
+
+```bash
+curl -X POST http://localhost:8000/api/chamados/ \
+  -H "Content-Type: application/json" \
+  -d '{"titulo": "Impressora com defeito", "descricao": "Não imprime", "status": "ABERTO"}'
+```
+
+Cadastro sem título retorna HTTP 400 com a mensagem de validação. Status inválido no filtro também retorna HTTP 400.
+
+### Campos do chamado
+
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `id` | inteiro | — | Identificador (somente leitura) |
+| `titulo` | string | sim | Título do chamado |
+| `descricao` | string | não | Descrição detalhada |
+| `status` | string | não | Status (`ABERTO` por padrão) |
+| `criado_em` | datetime | — | Data de criação (somente leitura) |
+| `atualizado_em` | datetime | — | Última atualização (somente leitura) |
+
+## Documentação adicional
+
+- Demandas da empresa: [`docs/issues.md`](docs/issues.md)
+- Contexto didático do repositório: [`docs/README.md`](docs/README.md)
