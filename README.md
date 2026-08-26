@@ -106,3 +106,69 @@ python manage.py runserver
 A API estará em `http://localhost:8000/api/chamados/`.
 
 Para usar a interface HTML, abra `frontend/index.html` no navegador com a API em execução.
+
+## Testes automatizados
+
+Com o ambiente virtual ativado e as dependências instaladas:
+
+```bash
+cd backend
+python manage.py test chamados
+```
+
+Para executar toda a suíte de testes do projeto:
+
+```bash
+cd backend
+python manage.py test
+```
+
+## Endpoints da API
+
+Base URL: `http://localhost:8000/api/`
+
+### Chamados
+
+| Método | Rota | Descrição |
+|---|---|---|
+| `GET` | `/chamados/` | Lista todos os chamados |
+| `GET` | `/chamados/?status=ABERTO` | Filtra chamados por status |
+| `POST` | `/chamados/` | Cria um novo chamado |
+| `GET` | `/chamados/{id}/` | Consulta um chamado pelo ID |
+| `PUT` / `PATCH` | `/chamados/{id}/` | Atualiza um chamado existente |
+
+**Status aceitos:** `ABERTO`, `EM_ANDAMENTO`, `CONCLUIDO`.
+
+### Exemplos
+
+Listar chamados abertos:
+
+```bash
+curl "http://localhost:8000/api/chamados/?status=ABERTO"
+```
+
+Criar chamado:
+
+```bash
+curl -X POST http://localhost:8000/api/chamados/ \
+  -H "Content-Type: application/json" \
+  -d '{"titulo": "Impressora com defeito", "descricao": "Não imprime", "status": "ABERTO"}'
+```
+
+Cadastro sem título retorna HTTP 400 com a mensagem de validação. Status inválido no filtro também retorna HTTP 400.
+
+### Campos do chamado
+
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `id` | inteiro | — | Identificador (somente leitura) |
+| `titulo` | string | sim | Título do chamado |
+| `descricao` | string | não | Descrição detalhada |
+| `status` | string | não | Status (`ABERTO` por padrão) |
+| `criado_em` | datetime | — | Data de criação (somente leitura) |
+| `atualizado_em` | datetime | — | Última atualização (somente leitura) |
+
+## Documentação adicional
+
+- Demandas da empresa: [`docs/issues.md`](docs/issues.md)
+- Contexto didático do repositório: [`docs/README.md`](docs/README.md)
