@@ -45,3 +45,64 @@ Para execução com Docker:
 
 - Docker
 - Docker Compose
+
+## Configuração do ambiente
+
+Copie o arquivo de exemplo e ajuste os valores conforme necessário:
+
+```bash
+cp .env.example .env
+```
+
+O arquivo `.env` **não** deve ser versionado — ele já está listado no `.gitignore`. Use o `.env.example` apenas como referência, substituindo os valores de exemplo antes de subir o ambiente.
+
+Variáveis disponíveis:
+
+| Variável | Descrição |
+|---|---|
+| `DJANGO_SECRET_KEY` | Chave secreta do Django |
+| `DEBUG` | Modo de depuração (`True` ou `False`) |
+| `ALLOWED_HOSTS` | Hosts permitidos, separados por vírgula |
+| `POSTGRES_DB` | Nome do banco PostgreSQL |
+| `POSTGRES_USER` | Usuário do banco |
+| `POSTGRES_PASSWORD` | Senha do banco |
+| `POSTGRES_HOST` | Host do banco (ex.: `db` no Docker) |
+| `POSTGRES_PORT` | Porta do banco (padrão: `5432`) |
+
+## Executar com Docker
+
+Na raiz do repositório, com o `.env` configurado:
+
+```bash
+docker compose up --build
+```
+
+A API ficará disponível em:
+
+```text
+http://localhost:8000/api/chamados/
+```
+
+Para encerrar os containers:
+
+```bash
+docker compose down
+```
+
+## Executar localmente (desenvolvimento)
+
+Alternativa para desenvolvimento sem Docker:
+
+```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate   # Linux/macOS
+# .venv\Scripts\Activate.ps1  # Windows PowerShell
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
+```
+
+A API estará em `http://localhost:8000/api/chamados/`.
+
+Para usar a interface HTML, abra `frontend/index.html` no navegador com a API em execução.
