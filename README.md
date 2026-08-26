@@ -1,48 +1,47 @@
 # Sistema de Chamados — Nexa Solutions
 
-Projeto inicial para a disciplina de Manutenção e Evolução de Software.
+API REST para abertura e acompanhamento de chamados de suporte interno, com interface HTML simples para consulta e cadastro.
 
 ## Contexto
 
-A Nexa Solutions possui um sistema interno para abertura e acompanhamento de chamados de suporte.
-
-O projeto possui uma API REST desenvolvida em Django e uma interface HTML simples para consulta e cadastro de chamados.
+A Nexa Solutions utiliza este sistema para registrar chamados com título, descrição e status. O backend foi desenvolvido com Django e Django REST Framework; o frontend é uma página HTML estática que consome a API.
 
 ## Tecnologias
 
-- Python
-- Django
+- Python 3.12+
+- Django 5
 - Django REST Framework
-- SQLite
-- Docker
-- Docker Compose
+- SQLite (desenvolvimento local)
+- PostgreSQL (ambiente Docker)
+- Docker e Docker Compose
 - Git
 
-## Estrutura
+## Estrutura do projeto
 
 ```text
-backend/   # API Django
-frontend/  # Interface HTML simples
-docs/      # Documentação e demandas
+nexa-solutions/
+├── backend/           # API Django
+│   ├── chamados/      # App de chamados
+│   ├── config/        # Configurações do projeto
+│   ├── manage.py
+│   └── requirements.txt
+├── frontend/          # Interface HTML simples
+│   └── index.html
+├── docs/              # Documentação e demandas da empresa
+├── .env.example       # Modelo de variáveis de ambiente
+├── Dockerfile
+├── docker-compose.yml
+└── README.md
 ```
 
-## Executar localmente
+## Pré-requisitos
 
-```bash
-cd backend
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver
-```
+Para execução local:
 
-A API estará disponível em:
+- Python 3.12 ou superior
+- `pip` e ambiente virtual (`venv`)
 
-```text
-http://localhost:8000/api/chamados/
-```
+Para execução com Docker:
 
-## Observação
-
-A documentação deste projeto está incompleta. A dupla deverá melhorar este arquivo como parte da atividade.
+- Docker
+- Docker Compose
