@@ -1,12 +1,41 @@
 import os
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get(
-    "DJANGO_SECRET_KEY",
-    "django-insecure-nexa-solutions-chave-exposta-nao-usar-em-producao",
-)
+_LOCAL_ENV_VARS = ("DJANGO_SECRET_KEY", "DEBUG", "ALLOWED_HOSTS")
+
+
+def _load_env_file(env_path: Path) -> None:
+    if not env_path.is_file():
+        return
+    for line in env_path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        key, _, value = line.partition("=")
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        if key in _LOCAL_ENV_VARS and key not in os.environ:
+            os.environ[key] = value
+
+
+_load_env_file(BASE_DIR.parent / ".env")
+
+
+def _require_env(name: str) -> str:
+    value = os.environ.get(name)
+    if not value:
+        raise ImproperlyConfigured(
+            f"A variável de ambiente {name} é obrigatória. "
+            "Copie .env.example para .env e configure os valores."
+        )
+    return value
+
+
+SECRET_KEY = _require_env("DJANGO_SECRET_KEY")
 
 DEBUG = os.environ.get("DEBUG", "True").lower() in ("true", "1", "yes")
 
@@ -61,10 +90,10 @@ if os.environ.get("POSTGRES_HOST"):
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.environ.get("POSTGRES_DB", "nexa_chamados"),
-            "USER": os.environ.get("POSTGRES_USER", "nexa_user"),
-            "PASSWORD": os.environ.get("POSTGRES_PASSWORD", ""),
-            "HOST": os.environ.get("POSTGRES_HOST", "db"),
+            "NAME": _require_env("POSTGRES_DB"),
+            "USER": _require_env("POSTGRES_USER"),
+            "PASSWORD": _require_env("POSTGRES_PASSWORD"),
+            "HOST": os.environ["POSTGRES_HOST"],
             "PORT": os.environ.get("POSTGRES_PORT", "5432"),
         }
     }
