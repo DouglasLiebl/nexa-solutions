@@ -98,3 +98,51 @@ class FiltroChamadoPorStatusTests(APITestCase):
         self.assertIn("status", resposta.json())
         self.assertEqual(Chamado.objects.count(), 4)
 
+
+class IndicadoresChamadosTests(APITestCase):
+    def setUp(self):
+        self.url = reverse("indicadores")
+        Chamado.objects.create(
+            titulo="Impressora com defeito",
+            status=Chamado.Status.ABERTO,
+        )
+        Chamado.objects.create(titulo="Acesso à VPN", status=Chamado.Status.ABERTO)
+        Chamado.objects.create(
+            titulo="Troca de notebook",
+            status=Chamado.Status.EM_ANDAMENTO,
+        )
+        Chamado.objects.create(
+            titulo="Instalação de software",
+            status=Chamado.Status.CONCLUIDO,
+        )
+
+    def test_retorna_totais_por_status(self):
+        resposta = self.client.get(self.url)
+
+        self.assertEqual(resposta.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            resposta.json(),
+            {
+                "total": 4,
+                "abertos": 2,
+                "em_andamento": 1,
+                "concluidos": 1,
+            },
+        )
+
+    def test_retorna_zeros_quando_nao_ha_chamados(self):
+        Chamado.objects.all().delete()
+
+        resposta = self.client.get(self.url)
+
+        self.assertEqual(resposta.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            resposta.json(),
+            {
+                "total": 0,
+                "abertos": 0,
+                "em_andamento": 0,
+                "concluidos": 0,
+            },
+        )
+
