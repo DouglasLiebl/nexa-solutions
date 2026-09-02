@@ -1,103 +1,114 @@
 # Sistema de Chamados — Nexa Solutions
 
+[![Tests](https://github.com/DouglasLiebl/nexa-solutions/actions/workflows/test.yml/badge.svg)](https://github.com/DouglasLiebl/nexa-solutions/actions/workflows/test.yml)
+![Python](https://img.shields.io/badge/python-3.12+-blue.svg)
+![Django](https://img.shields.io/badge/django-5.x-green.svg)
+
 API REST para abertura e acompanhamento de chamados de suporte interno, com interface HTML simples para consulta e cadastro.
 
-## Contexto
+## Funcionalidades
 
-A Nexa Solutions utiliza este sistema para registrar chamados com título, descrição e status. O backend foi desenvolvido com Django e Django REST Framework; o frontend é uma página HTML estática que consome a API.
+- Cadastro e consulta de chamados com título, descrição e status
+- Validação de título obrigatório (HTTP 400 em vez de erro interno)
+- Filtro de listagem por status (`ABERTO`, `EM_ANDAMENTO`, `CONCLUIDO`)
+- Indicadores consolidados por status para a coordenação
+- Ambiente reproduzível com Docker e PostgreSQL
+- Configurações sensíveis via variáveis de ambiente
+- Suíte de testes automatizados das funcionalidades críticas
 
 ## Tecnologias
 
-- Python 3.12+
-- Django 5
-- Django REST Framework
-- SQLite (desenvolvimento local)
-- PostgreSQL (ambiente Docker)
-- Docker e Docker Compose
-- Git
+| Camada | Stack |
+|---|---|
+| Backend | Python 3.12+, Django 5, Django REST Framework |
+| Banco local | SQLite |
+| Banco Docker | PostgreSQL 16 |
+| Infra | Docker, Docker Compose |
+| Frontend | HTML estático |
 
 ## Estrutura do projeto
 
 ```text
 nexa-solutions/
-├── backend/           # API Django
-│   ├── chamados/      # App de chamados
-│   ├── config/        # Configurações do projeto
+├── backend/
+│   ├── chamados/          # App de chamados (models, views, testes)
+│   ├── config/            # Configurações do Django
 │   ├── manage.py
 │   └── requirements.txt
-├── frontend/          # Interface HTML simples
-│   └── index.html
-├── docs/              # Documentação e demandas da empresa
-├── .env.example       # Modelo de variáveis de ambiente
+├── docker/
+│   └── entrypoint.sh      # Espera o PostgreSQL e aplica migrações
+├── frontend/
+│   └── index.html         # Interface simples de consulta e cadastro
+├── docs/
+│   ├── issues.md          # Demandas da empresa (INC-01 a INC-07)
+│   └── README.md          # Contexto didático
+├── .env.example           # Modelo de variáveis de ambiente
 ├── Dockerfile
 ├── docker-compose.yml
 └── README.md
 ```
 
-## Pré-requisitos
+## Início rápido (Docker)
 
-Para execução local:
+Recomendado para validar o ambiente completo com PostgreSQL:
 
-- Python 3.12 ou superior
-- `pip` e ambiente virtual (`venv`)
+```bash
+cp .env.example .env
+docker compose up --build
+```
 
-Para execução com Docker:
+A API ficará em `http://localhost:8000/api/chamados/`.
 
-- Docker
-- Docker Compose
+Para rodar em segundo plano:
+
+```bash
+docker compose up --build -d
+docker compose logs -f api   # acompanhar logs
+docker compose down          # encerrar
+```
+
+> **Importante:** garanta que a porta `8000` esteja livre antes de subir os containers. Se outro processo estiver usando a porta, o serviço `api` pode falhar ao iniciar.
 
 ## Configuração do ambiente
 
-Copie o arquivo de exemplo e ajuste os valores conforme necessário:
+Copie o arquivo de exemplo na raiz do repositório:
 
 ```bash
 cp .env.example .env
 ```
 
-O arquivo `.env` **não** deve ser versionado — ele já está listado no `.gitignore`. Use o `.env.example` apenas como referência, substituindo os valores de exemplo antes de subir o ambiente.
+O `.env` **não** deve ser versionado — já está no `.gitignore`. Substitua os valores de exemplo antes de usar em produção.
 
-Variáveis disponíveis:
+| Variável | Descrição | Obrigatória |
+|---|---|---|
+| `DJANGO_SECRET_KEY` | Chave secreta do Django | Sim |
+| `DEBUG` | Modo de depuração (`True` ou `False`) | Não |
+| `ALLOWED_HOSTS` | Hosts permitidos, separados por vírgula | Não |
+| `POSTGRES_DB` | Nome do banco PostgreSQL | Sim (Docker) |
+| `POSTGRES_USER` | Usuário do banco | Sim (Docker) |
+| `POSTGRES_PASSWORD` | Senha do banco | Sim (Docker) |
+| `POSTGRES_HOST` | Host do banco (use `db` no Docker) | Sim (Docker) |
+| `POSTGRES_PORT` | Porta do banco (padrão: `5432`) | Não |
 
-| Variável | Descrição |
-|---|---|
-| `DJANGO_SECRET_KEY` | Chave secreta do Django |
-| `DEBUG` | Modo de depuração (`True` ou `False`) |
-| `ALLOWED_HOSTS` | Hosts permitidos, separados por vírgula |
-| `POSTGRES_DB` | Nome do banco PostgreSQL |
-| `POSTGRES_USER` | Usuário do banco |
-| `POSTGRES_PASSWORD` | Senha do banco |
-| `POSTGRES_HOST` | Host do banco (ex.: `db` no Docker) |
-| `POSTGRES_PORT` | Porta do banco (padrão: `5432`) |
+### Banco de dados por ambiente
 
-## Executar com Docker
+| Ambiente | Banco | Como é configurado |
+|---|---|---|
+| Docker Compose | PostgreSQL | Variáveis `POSTGRES_*` injetadas pelo Compose |
+| Desenvolvimento local | SQLite | Usado quando `POSTGRES_HOST` não está definido |
 
-Na raiz do repositório, com o `.env` configurado:
-
-```bash
-docker compose up --build
-```
-
-A API ficará disponível em:
-
-```text
-http://localhost:8000/api/chamados/
-```
-
-Para encerrar os containers:
-
-```bash
-docker compose down
-```
+No desenvolvimento local, o `.env` carrega apenas `DJANGO_SECRET_KEY`, `DEBUG` e `ALLOWED_HOSTS`. As credenciais PostgreSQL são lidas somente no container Docker.
 
 ## Executar localmente (desenvolvimento)
 
-Alternativa para desenvolvimento sem Docker:
+Alternativa sem Docker, usando SQLite:
 
 ```bash
+cp .env.example .env
 cd backend
 python3 -m venv .venv
-source .venv/bin/activate   # Linux/macOS
-# .venv\Scripts\Activate.ps1  # Windows PowerShell
+source .venv/bin/activate        # Linux/macOS
+# .venv\Scripts\Activate.ps1     # Windows PowerShell
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py runserver
@@ -109,32 +120,26 @@ Para usar a interface HTML, abra `frontend/index.html` no navegador com a API em
 
 ## Testes automatizados
 
-Antes de executar os testes localmente, configure o ambiente:
+A suíte é executada automaticamente no GitHub Actions a cada push e pull request para a branch `main`. Confira o status no badge acima ou em [Actions](https://github.com/DouglasLiebl/nexa-solutions/actions/workflows/test.yml).
+
+### Localmente
 
 ```bash
 cp .env.example .env
 cd backend
-python3 -m venv .venv
-source .venv/bin/activate   # Linux/macOS
-# .venv\Scripts\Activate.ps1  # Windows PowerShell
+source .venv/bin/activate
 pip install -r requirements.txt
+python manage.py test chamados    # app de chamados
+python manage.py test             # suíte completa
 ```
 
-Com o ambiente virtual ativado, execute a suíte do app de chamados:
+### No Docker
 
 ```bash
-cd backend
-python manage.py test chamados
+docker compose exec api python manage.py test
 ```
 
-Para executar toda a suíte de testes do projeto:
-
-```bash
-cd backend
-python manage.py test
-```
-
-A suíte cobre as funcionalidades críticas da API:
+### Cobertura
 
 | Cenário | Classe de teste |
 |---|---|
@@ -159,13 +164,24 @@ Base URL: `http://localhost:8000/api/`
 
 **Status aceitos:** `ABERTO`, `EM_ANDAMENTO`, `CONCLUIDO`.
 
+#### Campos do chamado
+
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `id` | inteiro | — | Identificador (somente leitura) |
+| `titulo` | string | sim | Título do chamado |
+| `descricao` | string | não | Descrição detalhada |
+| `status` | string | não | Status (`ABERTO` por padrão) |
+| `criado_em` | datetime | — | Data de criação (somente leitura) |
+| `atualizado_em` | datetime | — | Última atualização (somente leitura) |
+
 ### Indicadores
 
 | Método | Rota | Descrição |
 |---|---|---|
 | `GET` | `/indicadores/` | Totais de chamados por status |
 
-Retorno de exemplo:
+Resposta de exemplo:
 
 ```json
 {
@@ -176,7 +192,7 @@ Retorno de exemplo:
 }
 ```
 
-### Exemplos
+### Exemplos com curl
 
 Listar chamados abertos:
 
@@ -192,18 +208,36 @@ curl -X POST http://localhost:8000/api/chamados/ \
   -d '{"titulo": "Impressora com defeito", "descricao": "Não imprime", "status": "ABERTO"}'
 ```
 
-Cadastro sem título retorna HTTP 400 com a mensagem de validação. Status inválido no filtro também retorna HTTP 400.
+Consultar indicadores:
 
-### Campos do chamado
+```bash
+curl "http://localhost:8000/api/indicadores/"
+```
 
-| Campo | Tipo | Obrigatório | Descrição |
-|---|---|---|---|
-| `id` | inteiro | — | Identificador (somente leitura) |
-| `titulo` | string | sim | Título do chamado |
-| `descricao` | string | não | Descrição detalhada |
-| `status` | string | não | Status (`ABERTO` por padrão) |
-| `criado_em` | datetime | — | Data de criação (somente leitura) |
-| `atualizado_em` | datetime | — | Última atualização (somente leitura) |
+Atualizar status de um chamado:
+
+```bash
+curl -X PATCH http://localhost:8000/api/chamados/1/ \
+  -H "Content-Type: application/json" \
+  -d '{"status": "CONCLUIDO"}'
+```
+
+### Respostas de erro comuns
+
+| Situação | HTTP | Exemplo de resposta |
+|---|---|---|
+| Cadastro sem título | 400 | `{"titulo": ["O título é obrigatório."]}` |
+| Filtro com status inválido | 400 | `{"status": "Status inválido. Valores aceitos: ABERTO, EM_ANDAMENTO, CONCLUIDO."}` |
+| Chamado não encontrado | 404 | Página padrão do Django REST Framework |
+
+## Solução de problemas
+
+| Problema | Causa provável | Solução |
+|---|---|---|
+| `ImproperlyConfigured: DJANGO_SECRET_KEY` | `.env` ausente ou incompleto | `cp .env.example .env` |
+| Porta 8000 em uso | Outro servidor na mesma porta | Encerre o processo ou use `docker compose down` antes de subir novamente |
+| API não conecta ao banco no Docker | Container `api` fora da rede | `docker compose down && docker compose up --build` |
+| Testes locais tentam usar PostgreSQL | `POSTGRES_HOST` exportado no shell | Remova a variável ou use apenas o `.env` padrão para SQLite |
 
 ## Documentação adicional
 
