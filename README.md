@@ -109,7 +109,18 @@ Para usar a interface HTML, abra `frontend/index.html` no navegador com a API em
 
 ## Testes automatizados
 
-Com o ambiente virtual ativado e as dependências instaladas:
+Antes de executar os testes localmente, configure o ambiente:
+
+```bash
+cp .env.example .env
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate   # Linux/macOS
+# .venv\Scripts\Activate.ps1  # Windows PowerShell
+pip install -r requirements.txt
+```
+
+Com o ambiente virtual ativado, execute a suíte do app de chamados:
 
 ```bash
 cd backend
@@ -122,6 +133,15 @@ Para executar toda a suíte de testes do projeto:
 cd backend
 python manage.py test
 ```
+
+A suíte cobre as funcionalidades críticas da API:
+
+| Cenário | Classe de teste |
+|---|---|
+| Criação válida de chamado | `CadastroChamadoValidoTests` |
+| Criação sem título | `CadastroChamadoSemTituloTests` |
+| Filtro por status | `FiltroChamadoPorStatusTests` |
+| Indicadores | `IndicadoresChamadosTests` |
 
 ## Endpoints da API
 
@@ -138,6 +158,23 @@ Base URL: `http://localhost:8000/api/`
 | `PUT` / `PATCH` | `/chamados/{id}/` | Atualiza um chamado existente |
 
 **Status aceitos:** `ABERTO`, `EM_ANDAMENTO`, `CONCLUIDO`.
+
+### Indicadores
+
+| Método | Rota | Descrição |
+|---|---|---|
+| `GET` | `/indicadores/` | Totais de chamados por status |
+
+Retorno de exemplo:
+
+```json
+{
+  "total": 4,
+  "abertos": 2,
+  "em_andamento": 1,
+  "concluidos": 1
+}
+```
 
 ### Exemplos
 

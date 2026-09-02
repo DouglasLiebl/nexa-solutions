@@ -5,6 +5,44 @@ from rest_framework.test import APITestCase
 from chamados.models import Chamado
 
 
+class CadastroChamadoValidoTests(APITestCase):
+    def setUp(self):
+        self.url = reverse("chamado-list-create")
+
+    def test_cria_chamado_com_dados_validos(self):
+        resposta = self.client.post(
+            self.url,
+            {
+                "titulo": "Impressora com defeito",
+                "descricao": "Não imprime",
+                "status": "ABERTO",
+            },
+            format="json",
+        )
+
+        self.assertEqual(resposta.status_code, status.HTTP_201_CREATED)
+        dados = resposta.json()
+        self.assertEqual(dados["titulo"], "Impressora com defeito")
+        self.assertEqual(dados["descricao"], "Não imprime")
+        self.assertEqual(dados["status"], "ABERTO")
+        self.assertIn("id", dados)
+        self.assertIn("criado_em", dados)
+        self.assertEqual(Chamado.objects.count(), 1)
+
+    def test_cria_chamado_apenas_com_titulo(self):
+        resposta = self.client.post(
+            self.url,
+            {"titulo": "Acesso à VPN"},
+            format="json",
+        )
+
+        self.assertEqual(resposta.status_code, status.HTTP_201_CREATED)
+        dados = resposta.json()
+        self.assertEqual(dados["titulo"], "Acesso à VPN")
+        self.assertEqual(dados["status"], "ABERTO")
+        self.assertEqual(Chamado.objects.count(), 1)
+
+
 class CadastroChamadoSemTituloTests(APITestCase):
     def setUp(self):
         self.url = reverse("chamado-list-create")
