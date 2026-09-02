@@ -9,12 +9,18 @@ import sys
 
 import psycopg2
 
+required = ("POSTGRES_DB", "POSTGRES_USER", "POSTGRES_PASSWORD", "POSTGRES_HOST")
+missing = [name for name in required if not os.environ.get(name)]
+if missing:
+    print(f"Variáveis de ambiente obrigatórias ausentes: {', '.join(missing)}", file=sys.stderr)
+    sys.exit(1)
+
 try:
     psycopg2.connect(
-        dbname=os.environ.get("POSTGRES_DB", "nexa_chamados"),
-        user=os.environ.get("POSTGRES_USER", "nexa_user"),
-        password=os.environ.get("POSTGRES_PASSWORD", ""),
-        host=os.environ.get("POSTGRES_HOST", "db"),
+        dbname=os.environ["POSTGRES_DB"],
+        user=os.environ["POSTGRES_USER"],
+        password=os.environ["POSTGRES_PASSWORD"],
+        host=os.environ["POSTGRES_HOST"],
         port=os.environ.get("POSTGRES_PORT", "5432"),
         connect_timeout=3,
     ).close()
